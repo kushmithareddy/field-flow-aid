@@ -1,8 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Droplets, Zap, Thermometer, Beaker, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-// Import your Supabase client
-import { supabase } from "@/lib/supabase"; 
 
 // Define a type for the dynamic data that will be fetched and processed
 interface SoilMetric {
@@ -51,77 +49,19 @@ export const SoilHealthIndicator = () => {
   
   // --- Data Fetching and Logic ---
   useEffect(() => {
-    const fetchSoilData = async () => {
-      setLoading(true);
-
-      // 1. Fetch the LATEST soil analysis data
-      const { data: latestSoil, error: soilError } = await supabase
-        .from('soil_data')
-        .select('ph_level, moisture_percent, temperature, nutrients_n, recorded_at') 
-        .order('recorded_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (soilError || !latestSoil) {
-        console.error("Error fetching latest soil data:", soilError);
-        setLoading(false);
-        return;
-      }
-      
-      // 2. Call the Recommendation function (RPC)
-      // Pass the current nutrient value (assuming 'nutrients_n' from your table is the input)
-      const { data: recData, error: recError } = await supabase
-        .rpc('get_nutrient_recommendation', { 
-            p_n_level: latestSoil.nutrients_n 
-        });
-
-      if (recData) {
-        setRecommendation(recData);
-      }
-      if (recError) console.error("Error fetching recommendation:", recError);
-
-      // 3. Transform fetched data into the SoilMetrics array format
+    setLoading(true);
+    const t = setTimeout(() => {
       const newMetrics: SoilMetric[] = [
-        {
-          name: "Moisture",
-          value: latestSoil.moisture_percent,
-          optimal: "60-75%", // Hardcoded optimal for now; could fetch from 'crops' table later
-          status: (latestSoil.moisture_percent >= 60 && latestSoil.moisture_percent <= 75) ? "Optimal" : "Fair",
-          icon: <Droplets className="h-4 w-4" />,
-          color: "text-sky-blue"
-        },
-        {
-          name: "pH Level",
-          value: latestSoil.ph_level,
-          optimal: "6.0-7.5",
-          status: (latestSoil.ph_level >= 6.0 && latestSoil.ph_level <= 7.5) ? "Optimal" : "Fair",
-          icon: <Beaker className="h-4 w-4" />,
-          color: "text-success",
-          isDecimal: true
-        },
-        {
-          name: "Temperature",
-          value: latestSoil.temperature,
-          optimal: "18-25°C",
-          status: (latestSoil.temperature >= 18 && latestSoil.temperature <= 25) ? "Good" : "Fair",
-          icon: <Thermometer className="h-4 w-4" />,
-          color: "text-warning"
-        },
-        {
-          name: "Nutrients",
-          value: latestSoil.nutrients_n, // Assuming 0-100 scale for simplicity
-          optimal: "80-100%",
-          status: (latestSoil.nutrients_n >= 80) ? "Good" : "Fair",
-          icon: <Zap className="h-4 w-4" />,
-          color: "text-success"
-        }
+        { name: "Moisture", value: 45, optimal: "40-60%", status: "Good", icon: <Droplets className="h-4 w-4" />, color: "text-accent" },
+        { name: "pH Level", value: "6.8", optimal: "6.0-7.0", status: "Optimal", icon: <Beaker className="h-4 w-4" />, color: "text-success", isDecimal: true },
+        { name: "Temperature", value: 22, optimal: "18-25°C", status: "Good", icon: <Thermometer className="h-4 w-4" />, color: "text-warning" },
+        { name: "Nutrients", value: 78, optimal: "70-90%", status: "Good", icon: <Zap className="h-4 w-4" />, color: "text-success" },
       ];
-
       setSoilMetrics(newMetrics);
+      setRecommendation("Apply balanced NPK fertilizer next week.");
       setLoading(false);
-    };
-
-    fetchSoilData();
+    }, 600);
+    return () => clearTimeout(t);
   }, []);
 
   // --- Rendering ---

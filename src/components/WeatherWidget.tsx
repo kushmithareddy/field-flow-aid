@@ -1,6 +1,5 @@
 import { Cloud, Sun, CloudRain, Droplets, Wind, Eye, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase"; 
 
 // Define the type for the current weather data fetched from your table
 interface CurrentWeather {
@@ -34,41 +33,17 @@ export const WeatherWidget = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchWeatherData = async () => {
-            setLoading(true);
-            
-            // 1. Fetch CURRENT Weather (Latest record)
-            const { data: currentData, error: currentError } = await supabase
-                .from('weather_data')
-                .select('temperature, condition, humidity, wind_speed, visibility') 
-                .order('recorded_at', { ascending: false }) // Assuming you log data over time
-                .limit(1)
-                .single();
-
-            // 2. Fetch 3-Day FORECAST
-            const { data: forecastData, error: forecastError } = await supabase
-                .from('weather_forecast') // Assuming a separate table for forecasts
-                .select('day_name, temp_high, temp_low, condition')
-                .order('date', { ascending: true })
-                .limit(3);
-
-            if (currentData) {
-                // Adjust keys if your DB uses snake_case and your component uses camelCase
-                setCurrentWeather(currentData as CurrentWeather);
-            } else if (currentError) {
-                console.error("Error fetching current weather:", currentError);
-            }
-
-            if (forecastData) {
-                setForecast(forecastData as ForecastDay[]);
-            } else if (forecastError) {
-                console.error("Error fetching forecast:", forecastError);
-            }
-
+        setLoading(true);
+        const t = setTimeout(() => {
+            setCurrentWeather({ temperature: 24, condition: "Partly Cloudy", humidity: 65, wind_speed: 12, visibility: 10 });
+            setForecast([
+                { day_name: "Today", temp_high: 26, temp_low: 18, condition: "Sunny" },
+                { day_name: "Tomorrow", temp_high: 23, temp_low: 16, condition: "Rainy" },
+                { day_name: "Thursday", temp_high: 25, temp_low: 17, condition: "Cloudy" }
+            ]);
             setLoading(false);
-        };
-
-        fetchWeatherData();
+        }, 700);
+        return () => clearTimeout(t);
     }, []);
 
     // Display loading state if data is not yet available
